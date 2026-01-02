@@ -53,10 +53,6 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects }) => {
               <p className="text-xs text-black tracking-widest uppercase">{project.client}</p>
             </div>
             <div>
-              <h5 className="text-[9px] tracking-[0.4em] text-zinc-300 uppercase mb-4">Year</h5>
-              <p className="text-xs text-black tracking-widest">{project.year}</p>
-            </div>
-            <div>
               <h5 className="text-[9px] tracking-[0.4em] text-zinc-300 uppercase mb-4">Role</h5>
               <p className="text-xs text-black tracking-widest uppercase font-medium">{project.role}</p>
             </div>

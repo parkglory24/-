@@ -235,7 +235,7 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
                 </div>
 
                 <div className="mt-12">
-                  <input placeholder="VIDEO URL (MP4)" className="w-full bg-transparent border-b border-zinc-200 p-3 text-black outline-none focus:border-black text-[10px] tracking-widest placeholder:text-zinc-300" value={newProject.videoUrl || ''} onChange={(e) => setNewProject({...newProject, videoUrl: e.target.value})} />
+                  <input placeholder="VIDEO URL (MP4 / YOUTUBE / VIMEO)" className="w-full bg-transparent border-b border-zinc-200 p-3 text-black outline-none focus:border-black text-[10px] tracking-widest placeholder:text-zinc-300" value={newProject.videoUrl || ''} onChange={(e) => setNewProject({...newProject, videoUrl: e.target.value})} />
                 </div>
               </div>
 
@@ -258,8 +258,6 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
                       <h3 className="text-black font-serif text-2xl font-light uppercase tracking-tight">{p.title}</h3>
                       <div className="flex gap-8 items-center">
                         <span className="text-[8px] tracking-[0.5em] text-zinc-300 uppercase font-light">{p.category}</span>
-                        <div className="w-1 h-1 bg-zinc-200 rounded-full"></div>
-                        <span className="text-[8px] tracking-[0.5em] text-zinc-300 uppercase font-light">{p.year}</span>
                       </div>
                     </div>
                   </div>

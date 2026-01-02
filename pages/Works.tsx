@@ -94,9 +94,8 @@ const Works: React.FC<WorksProps> = ({ projects, settings }) => {
               <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity"></div>
             </div>
             <div className="space-y-4 px-1">
-              <div className="flex justify-between items-center text-[8px] tracking-[0.4em] text-zinc-300 uppercase">
+              <div className="text-[8px] tracking-[0.4em] text-zinc-300 uppercase">
                 <span>{project.category}</span>
-                <span>{project.year}</span>
               </div>
               <h3 className="text-xl font-serif text-black uppercase font-light tracking-wide">{project.title}</h3>
               <div className="h-[0.5px] w-full bg-black scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-700 opacity-20"></div>
