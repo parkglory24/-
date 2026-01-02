@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import Home from './pages/Home';
-import Works from './pages/Works';
-import ProjectDetail from './pages/ProjectDetail';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Admin from './pages/Admin';
-import { Project, SiteSettings } from './types';
-import { INITIAL_PROJECTS, INITIAL_SETTINGS } from './constants';
+import Home from './pages/Home.tsx';
+import Works from './pages/Works.tsx';
+import ProjectDetail from './pages/ProjectDetail.tsx';
+import About from './pages/About.tsx';
+import Contact from './pages/Contact.tsx';
+import Admin from './pages/Admin.tsx';
+import { Project, SiteSettings } from './types.ts';
+import { INITIAL_PROJECTS, INITIAL_SETTINGS } from './constants.ts';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -72,20 +72,26 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
 
   useEffect(() => {
-    const savedProjects = localStorage.getItem('cv_projects');
-    if (savedProjects) {
-      setProjects(JSON.parse(savedProjects));
-    } else {
-      setProjects(INITIAL_PROJECTS);
-      localStorage.setItem('cv_projects', JSON.stringify(INITIAL_PROJECTS));
-    }
+    try {
+      const savedProjects = localStorage.getItem('cv_projects');
+      if (savedProjects) {
+        setProjects(JSON.parse(savedProjects));
+      } else {
+        setProjects(INITIAL_PROJECTS);
+        localStorage.setItem('cv_projects', JSON.stringify(INITIAL_PROJECTS));
+      }
 
-    const savedSettings = localStorage.getItem('cv_settings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    } else {
+      const savedSettings = localStorage.getItem('cv_settings');
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
+      } else {
+        setSettings(INITIAL_SETTINGS);
+        localStorage.setItem('cv_settings', JSON.stringify(INITIAL_SETTINGS));
+      }
+    } catch (error) {
+      console.error("Storage initialization failed:", error);
+      setProjects(INITIAL_PROJECTS);
       setSettings(INITIAL_SETTINGS);
-      localStorage.setItem('cv_settings', JSON.stringify(INITIAL_SETTINGS));
     }
   }, []);
 
@@ -106,7 +112,7 @@ const App: React.FC = () => {
         <Navbar />
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={<Home projects={projects} />} />
+            <Route path="/" element={<Home />} />
             <Route path="/works" element={<Works projects={projects} settings={settings} />} />
             <Route path="/project/:id" element={<ProjectDetail projects={projects} />} />
             <Route path="/about" element={<About settings={settings} />} />
