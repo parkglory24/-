@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Home from './pages/Home.tsx';
 import Works from './pages/Works.tsx';
@@ -9,6 +9,24 @@ import Contact from './pages/Contact.tsx';
 import Admin from './pages/Admin.tsx';
 import { Project, SiteSettings } from './types.ts';
 import { INITIAL_PROJECTS, INITIAL_SETTINGS } from './constants.ts';
+
+// IndexedDB Utility for large data persistence
+const DB_NAME = 'StudioYeodamDB';
+const STORE_NAME = 'projects';
+
+const initDB = (): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -70,40 +88,72 @@ const AdminAccess: React.FC = () => (
 const App: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
+  const [isDBReady, setIsDBReady] = useState(false);
 
+  // Load Initial Data
   useEffect(() => {
-    try {
-      const savedProjects = localStorage.getItem('cv_projects');
-      if (savedProjects) {
-        setProjects(JSON.parse(savedProjects));
-      } else {
-        setProjects(INITIAL_PROJECTS);
-        localStorage.setItem('cv_projects', JSON.stringify(INITIAL_PROJECTS));
-      }
+    const loadData = async () => {
+      try {
+        // 1. Load Settings from LocalStorage (small data)
+        const savedSettings = localStorage.getItem('cv_settings');
+        if (savedSettings) {
+          setSettings(JSON.parse(savedSettings));
+        }
 
-      const savedSettings = localStorage.getItem('cv_settings');
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      } else {
-        setSettings(INITIAL_SETTINGS);
-        localStorage.setItem('cv_settings', JSON.stringify(INITIAL_SETTINGS));
+        // 2. Load Projects from IndexedDB (large data)
+        const db = await initDB();
+        const transaction = db.transaction(STORE_NAME, 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+          const result = request.result;
+          if (result && result.length > 0) {
+            // Sort by ID (time) descending
+            setProjects(result.sort((a, b) => b.id.localeCompare(a.id)));
+          } else {
+            setProjects(INITIAL_PROJECTS);
+          }
+          setIsDBReady(true);
+        };
+      } catch (error) {
+        console.error("Data loading failed:", error);
+        setIsDBReady(true); // Proceed anyway to show initial state
       }
-    } catch (error) {
-      console.error("Storage initialization failed:", error);
-      setProjects(INITIAL_PROJECTS);
-      setSettings(INITIAL_SETTINGS);
-    }
+    };
+
+    loadData();
   }, []);
 
-  const updateProjects = (newProjects: Project[]) => {
+  const updateProjects = useCallback(async (newProjects: Project[]) => {
     setProjects(newProjects);
-    localStorage.setItem('cv_projects', JSON.stringify(newProjects));
-  };
+    
+    try {
+      const db = await initDB();
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      
+      // Clear existing and add new
+      store.clear();
+      newProjects.forEach(project => {
+        store.add(project);
+      });
+
+      transaction.oncomplete = () => {
+        console.log("Projects saved to IndexedDB successfully");
+      };
+    } catch (error) {
+      console.error("Failed to save projects to IndexedDB:", error);
+      alert("데이터 저장 공간이 부족하거나 오류가 발생했습니다. 이미지 용량을 줄여주세요.");
+    }
+  }, []);
 
   const updateSettings = (newSettings: SiteSettings) => {
     setSettings(newSettings);
     localStorage.setItem('cv_settings', JSON.stringify(newSettings));
   };
+
+  if (!isDBReady) return null; // Prevent flicker during DB initialization
 
   return (
     <Router>

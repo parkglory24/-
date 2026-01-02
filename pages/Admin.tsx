@@ -4,7 +4,7 @@ import { Project, Category, SiteSettings } from '../types.ts';
 
 interface AdminProps {
   projects: Project[];
-  setProjects: (projects: Project[]) => void;
+  setProjects: (projects: Project[]) => Promise<void> | void;
   settings: SiteSettings;
   setSettings: (settings: SiteSettings) => void;
 }
@@ -16,6 +16,7 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>('Works');
   const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [newProject, setNewProject] = useState<Partial<Project>>({
     category: 'Film',
@@ -49,6 +50,9 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("파일 용량이 너무 큽니다. (최대 2MB 권장)");
+      }
       const base64 = await fileToBase64(file);
       setNewProject({ ...newProject, thumbnailUrl: base64 });
     }
@@ -72,24 +76,34 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
     setNewProject({ ...newProject, stillCuts: updated });
   };
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const project: Project = {
-      id: Date.now().toString(),
-      title: newProject.title || 'Untitled',
-      category: (newProject.category as Category) || 'Film',
-      client: newProject.client || '',
-      year: newProject.year || '',
-      role: newProject.role || '',
-      description: newProject.description || '',
-      approach: newProject.approach || '',
-      videoUrl: newProject.videoUrl || '',
-      thumbnailUrl: newProject.thumbnailUrl || 'https://picsum.photos/seed/thumb/800/1000',
-      stillCuts: newProject.stillCuts || [],
-    };
-    setProjects([project, ...projects]);
-    setIsAdding(false);
-    setNewProject({ category: 'Film', year: new Date().getFullYear().toString(), stillCuts: [] });
+    setIsSaving(true);
+    
+    try {
+      const project: Project = {
+        id: Date.now().toString(),
+        title: newProject.title || 'Untitled',
+        category: (newProject.category as Category) || 'Film',
+        client: newProject.client || '',
+        year: newProject.year || '',
+        role: newProject.role || '',
+        description: newProject.description || '',
+        approach: newProject.approach || '',
+        videoUrl: newProject.videoUrl || '',
+        thumbnailUrl: newProject.thumbnailUrl || 'https://picsum.photos/seed/thumb/800/1000',
+        stillCuts: newProject.stillCuts || [],
+      };
+      
+      await setProjects([project, ...projects]);
+      setIsAdding(false);
+      setNewProject({ category: 'Film', year: new Date().getFullYear().toString(), stillCuts: [] });
+      alert('아카이브에 성공적으로 저장되었습니다.');
+    } catch (err) {
+      alert('저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveSettings = (e: React.FormEvent) => {
@@ -98,10 +112,10 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
     alert('설정이 저장되었습니다.');
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('아카이브에서 영구적으로 삭제하시겠습니까?')) {
       const updatedProjects = projects.filter(p => p.id !== id);
-      setProjects(updatedProjects);
+      await setProjects(updatedProjects);
     }
   };
 
@@ -150,8 +164,9 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
         </div>
         {activeTab === 'Works' && (
           <button 
+            disabled={isSaving}
             onClick={() => setIsAdding(!isAdding)}
-            className="mt-8 md:mt-0 px-12 py-3 border border-black text-[9px] tracking-[0.5em] text-black uppercase hover:bg-black hover:text-white transition-all duration-700"
+            className="mt-8 md:mt-0 px-12 py-3 border border-black text-[9px] tracking-[0.5em] text-black uppercase hover:bg-black hover:text-white transition-all duration-700 disabled:opacity-50"
           >
             {isAdding ? 'Close Editor' : 'Create New Entry'}
           </button>
@@ -178,11 +193,15 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
                   <input placeholder="ROLE (E.G. DIRECTOR)" className="w-full bg-transparent border-b border-zinc-200 p-3 text-black outline-none focus:border-black text-[10px] tracking-widest uppercase placeholder:text-zinc-300" value={newProject.role || ''} onChange={(e) => setNewProject({...newProject, role: e.target.value})} />
                 </div>
               </div>
-              <textarea placeholder="PROJECT NARRATIVE / APPROACH" className="w-full bg-white border border-zinc-200 p-8 text-black outline-none focus:border-black text-[10px] h-40 resize-none leading-relaxed tracking-widest uppercase placeholder:text-zinc-300" value={newProject.approach || ''} onChange={(e) => setNewProject({...newProject, approach: e.target.value})} />
+              <textarea placeholder="PROJECT NARRATIVE / APPROACH" className="w-full bg-white border border-zinc-200 p-8 text-black outline-none focus:border-black text-[10px] h-40 resize-none leading-relaxed tracking-widest uppercase placeholder:text-zinc-300" value={newProject.description || ''} onChange={(e) => setNewProject({...newProject, description: e.target.value})} />
+              <textarea placeholder="PROJECT CORE APPROACH / WHY" className="w-full bg-white border border-zinc-200 p-8 text-black outline-none focus:border-black text-[10px] h-40 resize-none leading-relaxed tracking-widest uppercase placeholder:text-zinc-300 mt-8" value={newProject.approach || ''} onChange={(e) => setNewProject({...newProject, approach: e.target.value})} />
               
               <div className="space-y-12 bg-white p-8 border border-zinc-100">
                 <div className="flex flex-col gap-6">
-                  <label className="text-[9px] tracking-[0.4em] text-zinc-400 uppercase">Project Thumbnail</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-[9px] tracking-[0.4em] text-zinc-400 uppercase">Project Thumbnail</label>
+                    <span className="text-[7px] text-zinc-300 uppercase">Recommended: Under 2MB</span>
+                  </div>
                   <div className="flex gap-4 items-center">
                     <input 
                       placeholder="THUMBNAIL IMAGE URL" 
@@ -239,7 +258,13 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
                 </div>
               </div>
 
-              <button type="submit" className="w-full py-6 bg-black text-white text-[10px] tracking-[0.6em] font-light uppercase hover:bg-zinc-800 transition-all duration-700">Publish to Archive</button>
+              <button 
+                type="submit" 
+                disabled={isSaving}
+                className="w-full py-6 bg-black text-white text-[10px] tracking-[0.6em] font-light uppercase hover:bg-zinc-800 transition-all duration-700 disabled:opacity-50"
+              >
+                {isSaving ? 'Processing & Saving...' : 'Publish to Archive'}
+              </button>
             </form>
           )}
 
