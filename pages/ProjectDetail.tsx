@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { Project } from '../types';
+import { Project } from '../types.ts';
 
 interface ProjectDetailProps {
   projects: Project[];
@@ -13,19 +13,30 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects }) => {
 
   if (!project) return <Navigate to="/works" />;
 
+  const getVideoEmbedUrl = (url: string) => {
+    if (!url) return null;
+    
+    // YouTube
+    const ytMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/);
+    if (ytMatch) {
+      const id = ytMatch[1].split('&')[0];
+      return `https://www.youtube.com/embed/${id}?autoplay=0&rel=0`;
+    }
+
+    // Vimeo
+    const vimeoMatch = url.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(.+)/);
+    if (vimeoMatch) {
+      const id = vimeoMatch[1].split('?')[0];
+      return `https://player.vimeo.com/video/${id}`;
+    }
+
+    return null;
+  };
+
+  const embedUrl = getVideoEmbedUrl(project.videoUrl);
+
   return (
     <div className="bg-white min-h-screen pt-40">
-      {/* Video Presentation */}
-      <section className="relative w-full aspect-video bg-zinc-50 overflow-hidden mb-32 px-12">
-        <video 
-          className="w-full h-full object-contain"
-          controls
-          autoPlay
-          muted
-          src={project.videoUrl}
-        />
-      </section>
-
       {/* Narrative Section */}
       <section className="py-20 px-12 max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start gap-24 mb-48">
@@ -65,7 +76,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects }) => {
         </div>
 
         {/* Still Gallery */}
-        <div className="space-y-40">
+        <div className="space-y-40 mb-60">
           {project.stillCuts.map((cut, idx) => (
             <div key={idx} className="bg-white overflow-hidden shadow-sm border border-zinc-50 group">
               <img 
@@ -77,8 +88,30 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projects }) => {
           ))}
         </div>
 
+        {/* Video Presentation (Moved to Bottom) */}
+        {project.videoUrl && (
+          <section className="relative w-full aspect-video bg-zinc-50 overflow-hidden mb-32 group">
+            <div className="absolute inset-0 border border-zinc-100 z-10 pointer-events-none"></div>
+            {embedUrl ? (
+              <iframe
+                src={embedUrl}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                title={project.title}
+              ></iframe>
+            ) : (
+              <video 
+                className="w-full h-full object-contain"
+                controls
+                src={project.videoUrl}
+              />
+            )}
+          </section>
+        )}
+
         {/* Navigation */}
-        <div className="mt-60 pt-20 border-t border-zinc-100 flex justify-between items-center">
+        <div className="mt-40 pt-20 border-t border-zinc-100 flex justify-between items-center">
           <Link to="/works" className="text-[10px] tracking-[0.5em] text-zinc-400 hover:text-black uppercase transition-colors">
             Archive
           </Link>
