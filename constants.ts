@@ -8,6 +8,8 @@ export const INITIAL_SETTINGS: SiteSettings = {
   aboutPhilosophy: 'Philosophy',
   aboutDescription: '우리는 이미지를 단순히 기록하지 않습니다. 모든 프레임에 \'왜\'라는 질문을 던지고, 그 질문에 대한 해답을 정교한 조명과 연출로 구현합니다.',
   contactPunchline: "Let's build a new context.",
+  email: 'studio.yeodam@gmail.com',
+  phone: '+82 10 0000 0000',
   instagramUrl: 'https://instagram.com',
   youtubeUrl: 'https://youtube.com',
   vimeoUrl: 'https://vimeo.com'

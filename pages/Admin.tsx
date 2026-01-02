@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Project, Category, SiteSettings } from '../types';
+import { Project, Category, SiteSettings } from '../types.ts';
 
 interface AdminProps {
   projects: Project[];
@@ -318,6 +318,26 @@ const Admin: React.FC<AdminProps> = ({ projects, setProjects, settings, setSetti
               onChange={(e) => setEditSettings({...editSettings, contactPunchline: e.target.value})}
             />
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-zinc-50">
+            <div className="space-y-6">
+              <label className="text-[9px] tracking-[0.4em] text-zinc-300 uppercase">Email Address</label>
+              <input 
+                className="w-full bg-transparent border-b border-zinc-100 p-4 text-[10px] tracking-widest outline-none focus:border-black transition-all"
+                value={editSettings.email}
+                onChange={(e) => setEditSettings({...editSettings, email: e.target.value})}
+              />
+            </div>
+            <div className="space-y-6">
+              <label className="text-[9px] tracking-[0.4em] text-zinc-300 uppercase">Phone Number</label>
+              <input 
+                className="w-full bg-transparent border-b border-zinc-100 p-4 text-[10px] tracking-widest outline-none focus:border-black transition-all"
+                value={editSettings.phone}
+                onChange={(e) => setEditSettings({...editSettings, phone: e.target.value})}
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-zinc-50">
             <div className="space-y-6">
               <label className="text-[9px] tracking-[0.4em] text-zinc-300 uppercase">Instagram URL</label>

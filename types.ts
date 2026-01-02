@@ -20,6 +20,8 @@ export interface SiteSettings {
   aboutPhilosophy: string;
   aboutDescription: string;
   contactPunchline: string;
+  email: string;
+  phone: string;
   instagramUrl: string;
   youtubeUrl: string;
   vimeoUrl: string;
